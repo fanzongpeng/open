@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据管理后台</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --sidebar-width: 250px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+        }
+        
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(180deg, var(--secondary-color) 0%, #1a252f 100%);
+            color: white;
+            padding: 20px 0;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-brand {
+            padding: 20px 25px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-brand i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sidebar-menu li {
+            padding: 15px 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar-menu li:hover, .sidebar-menu li.active {
+            background: rgba(255,255,255,0.1);
+            border-left-color: var(--primary-color);
+        }
+        
+        .sidebar-menu li i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card .icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        .stat-card .label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .data-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        
+        .data-card .card-header {
+            background: white;
+            border-bottom: 2px solid #f0f0f0;
+            padding: 20px;
+        }
+        
+        .table-responsive {
+            padding: 0;
+        }
+        
+        .table thead th {
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: var(--secondary-color);
+            white-space: nowrap;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: #f1faff;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .search-box {
+            position: relative;
+            max-width: 300px;
+        }
+        
+        .search-box input {
+            padding-left: 40px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+        }
+        
+        .filter-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .modal-header {
+            background: var(--secondary-color);
+            color: white;
+            border-radius: 0;
+        }
+        
+        .modal-header .btn-close {
+            filter: invert(1);
+        }
+        
+        .page-link {
+            color: var(--primary-color);
+        }
+        
+        .page-item.active .page-link {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .badge-type {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        
+        .badge-常规 {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-专项 {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fas fa-database"></i> 数据管理后台
+        </div>
+        <ul class="sidebar-menu">
+            <li class="active"><i class="fas fa-home"></i> 首页</li>
+            <li onclick="showImportModal()"><i class="fas fa-upload"></i> 导入数据</li>
+            <li onclick="showBatchQueryModal()"><i class="fas fa-search"></i> 批量查询</li>
+            <li><i class="fas fa-chart-bar"></i> 数据统计</li>
+            <li><i class="fas fa-cog"></i> 系统设置</li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="number" id="totalCount">0</div>
+                            <div class="label">总记录数</div>
+                        </div>
+                        <div class="icon" style="background: #e3f2fd; color: #2196f3;">
+                            <i class="fas fa-list"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="number" id="projectCount">0</div>
+                            <div class="label">项目数量</div>
+                        </div>
+                        <div class="icon" style="background: #e8f5e9; color: #4caf50;">
+                            <i class="fas fa-project-diagram"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="number" id="regionCount">0</div>
+                            <div class="label">地区数量</div>
+                        </div>
+                        <div class="icon" style="background: #fff3e0; color: #ff9800;">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="number" id="avgTps">0</div>
+                            <div class="label">平均TPS</div>
+                        </div>
+                        <div class="icon" style="background: #fce4ec; color: #e91e63;">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" id="filterRegion" placeholder="地区">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control" id="filterProject" placeholder="项目名称">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control" id="filterTransaction" placeholder="交易名称">
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-primary me-2" onclick="loadData()">
+                        <i class="fas fa-search"></i> 查询
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                        <i class="fas fa-times"></i> 重置
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="data-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-table me-2"></i>数据列表</h5>
+                <div>
+                    <button class="btn btn-primary btn-sm" onclick="showImportModal()">
+                        <i class="fas fa-upload"></i> 导入Excel
+                    </button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                            <th>ID</th>
+                            <th>地区</th>
+                            <th>测试时间</th>
+                            <th>投产日期</th>
+                            <th>测试类型</th>
+                            <th>执行人</th>
+                            <th>项目名称</th>
+                            <th>交易码</th>
+                            <th>交易名称</th>
+                            <th>TPS</th>
+                            <th>响应时间</th>
+                            <th>错误率</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted" id="pageInfo"></span>
+                    <nav>
+                        <ul class="pagination justify-content-center mb-0" id="pagination">
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="importModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-upload me-2"></i>导入Excel数据</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">选择Excel文件 (.xlsx, .xls)</label>
+                        <input type="file" class="form-control" id="excelFile" accept=".xlsx,.xls">
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>支持 .xlsx 和 .xls 格式的Excel文件
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="importData()">导入</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i>编辑数据</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">地区</label>
+                                <input type="text" class="form-control" id="editRegion">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">测试时间</label>
+                                <input type="text" class="form-control" id="editTestTime">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">投产日期</label>
+                                <input type="text" class="form-control" id="editProductionDate">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">测试类型</label>
+                                <input type="text" class="form-control" id="editTestType">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">执行人</label>
+                                <input type="text" class="form-control" id="editExecutor">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">项目名称</label>
+                                <input type="text" class="form-control" id="editProjectName">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">交易码</label>
+                                <input type="text" class="form-control" id="editTransactionCode">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">交易名称</label>
+                                <input type="text" class="form-control" id="editTransactionName">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">TPS</label>
+                                <input type="number" class="form-control" id="editTps">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">响应时间</label>
+                                <input type="number" class="form-control" id="editResponseTime">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">错误率</label>
+                                <input type="number" class="form-control" id="editErrorRate">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEdit()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="batchQueryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-search me-2"></i>批量查询</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>已选择 <span id="selectedCount">0</span> 条记录</p>
+                    <div class="table-responsive" style="max-height: 400px;">
+                        <table class="table table-sm" id="batchResultTable">
+                            <thead>
+                                <tr>
+                                    <th>项目名称</th>
+                                    <th>交易名称</th>
+                                    <th>TPS</th>
+                                    <th>响应时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batchResultBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container"></div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentPage = 1;
+        let pageSize = 10;
+        let totalPages = 1;
+        let selectedIds = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            loadStats();
+        });
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            document.querySelector('.toast-container').appendChild(toast);
+            new bootstrap.Toast(toast).show();
+        }
+
+        function loadStats() {
+            fetch('/api/stats')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('totalCount').textContent = data.total;
+                    document.getElementById('projectCount').textContent = data.projects;
+                    document.getElementById('regionCount').textContent = data.regions;
+                    document.getElementById('avgTps').textContent = data.avg_tps;
+                });
+        }
+
+        function loadData() {
+            const region = document.getElementById('filterRegion').value;
+            const project = document.getElementById('filterProject').value;
+            const transaction = document.getElementById('filterTransaction').value;
+
+            fetch(`/api/data?page=${currentPage}&limit=${pageSize}&region=${region}&project_name=${project}&transaction_name=${transaction}`)
+                .then(res => res.json())
+                .then(data => {
+                    renderTable(data.data);
+                    totalPages = Math.ceil(data.total / pageSize);
+                    renderPagination(totalPages, data.total);
+                });
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = data.map(item => `
+                <tr>
+                    <td><input type="checkbox" class="row-checkbox" value="${item.id}" onchange="updateSelectedIds()"></td>
+                    <td>${item.id}</td>
+                    <td>${item.region || ''}</td>
+                    <td>${item.test_time || ''}</td>
+                    <td>${item.production_date || ''}</td>
+                    <td><span class="badge badge-type badge-${item.test_type || '常规'}">${item.test_type || ''}</span></td>
+                    <td>${item.executor || ''}</td>
+                    <td>${item.project_name || ''}</td>
+                    <td>${item.transaction_code || ''}</td>
+                    <td>${item.transaction_name || ''}</td>
+                    <td>${item.tps || 0}</td>
+                    <td>${item.response_time || 0}</td>
+                    <td>${item.error_rate || 0}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editRow(${item.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderPagination(totalPages, total) {
+            const pagination = document.getElementById('pagination');
+            const pageInfo = document.getElementById('pageInfo');
+            
+            pageInfo.textContent = `共 ${totalPages} 页 / 共 ${total} 条`;
+            
+            if (total === 0) {
+                pagination.innerHTML = '<li class="page-item disabled"><span class="page-link">暂无数据</span></li>';
+                return;
+            }
+
+            let html = `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="goPage(${currentPage - 1})">上一页</a>
+                </li>
+            `;
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    html += `
+                        <li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="javascript:void(0)" onclick="goPage(${i})">${i}</a>
+                        </li>
+                    `;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += `<li class="page-item disabled"><a class="page-link">...</a></li>`;
+                }
+            }
+
+            html += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="goPage(${currentPage + 1})">下一页</a>
+                </li>
+            `;
+
+            pagination.innerHTML = html;
+        }
+
+        function goPage(page) {
+            currentPage = page;
+            loadData();
+        }
+
+        function clearFilters() {
+            document.getElementById('filterRegion').value = '';
+            document.getElementById('filterProject').value = '';
+            document.getElementById('filterTransaction').value = '';
+            currentPage = 1;
+            loadData();
+        }
+
+        function showImportModal() {
+            const modal = new bootstrap.Modal(document.getElementById('importModal'));
+            modal.show();
+        }
+
+        function importData() {
+            const fileInput = document.getElementById('excelFile');
+            if (!fileInput.files[0]) {
+                showToast('请选择文件', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            fetch('/api/import', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message);
+                    bootstrap.Modal.getInstance(document.getElementById('importModal')).hide();
+                    fileInput.value = '';
+                    loadData();
+                    loadStats();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            });
+        }
+
+        function editRow(id) {
+            fetch(`/api/data?page=1&limit=1000`)
+                .then(res => res.json())
+                .then(result => {
+                    const item = result.data.find(d => d.id === id);
+                    if (item) {
+                        document.getElementById('editId').value = item.id;
+                        document.getElementById('editRegion').value = item.region || '';
+                        document.getElementById('editTestTime').value = item.test_time || '';
+                        document.getElementById('editProductionDate').value = item.production_date || '';
+                        document.getElementById('editTestType').value = item.test_type || '';
+                        document.getElementById('editExecutor').value = item.executor || '';
+                        document.getElementById('editProjectName').value = item.project_name || '';
+                        document.getElementById('editTransactionCode').value = item.transaction_code || '';
+                        document.getElementById('editTransactionName').value = item.transaction_name || '';
+                        document.getElementById('editTps').value = item.tps || 0;
+                        document.getElementById('editResponseTime').value = item.response_time || 0;
+                        document.getElementById('editErrorRate').value = item.error_rate || 0;
+
+                        const modal = new bootstrap.Modal(document.getElementById('editModal'));
+                        modal.show();
+                    }
+                });
+        }
+
+        function saveEdit() {
+            const data = {
+                id: document.getElementById('editId').value,
+                region: document.getElementById('editRegion').value,
+                test_time: document.getElementById('editTestTime').value,
+                production_date: document.getElementById('editProductionDate').value,
+                test_type: document.getElementById('editTestType').value,
+                executor: document.getElementById('editExecutor').value,
+                project_name: document.getElementById('editProjectName').value,
+                transaction_code: document.getElementById('editTransactionCode').value,
+                transaction_name: document.getElementById('editTransactionName').value,
+                tps: parseFloat(document.getElementById('editTps').value) || 0,
+                response_time: parseFloat(document.getElementById('editResponseTime').value) || 0,
+                error_rate: parseFloat(document.getElementById('editErrorRate').value) || 0
+            };
+
+            fetch('/api/edit', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    showToast('保存成功');
+                    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                    loadData();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
+        }
+
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            updateSelectedIds();
+        }
+
+        function updateSelectedIds() {
+            selectedIds = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => parseInt(cb.value));
+            document.getElementById('selectedCount').textContent = selectedIds.length;
+        }
+
+        function showBatchQueryModal() {
+            if (selectedIds.length === 0) {
+                showToast('请先选择要查询的数据', 'error');
+                return;
+            }
+
+            fetch('/api/batch-query', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ids: selectedIds})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const tbody = document.getElementById('batchResultBody');
+                    tbody.innerHTML = data.data.map(item => `
+                        <tr>
+                            <td>${item.project_name || ''}</td>
+                            <td>${item.transaction_name || ''}</td>
+                            <td>${item.tps || 0}</td>
+                            <td>${item.response_time || 0}</td>
+                        </tr>
+                    `).join('');
+                    const modal = new bootstrap.Modal(document.getElementById('batchQueryModal'));
+                    modal.show();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
